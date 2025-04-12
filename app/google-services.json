@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1042115577402",
+    "project_id": "solvemath-bbc53",
+    "storage_bucket": "solvemath-bbc53.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1042115577402:android:40f82f74a9aa231d5f1703",
+        "android_client_info": {
+          "package_name": "com.example.solvemath"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBX-txYN4NL258z1es2bXkwzvf9LC8nWVI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
