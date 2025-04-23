@@ -21,10 +21,11 @@ android {
         Properties properties = new Properties();
         properties.load(project.rootProject.file("local.properties").newDataInputStream())
         buildConfigField "String", "CLOUD_NAME", "\"" + properties.getProperty("CLOUD_NAME") + "\""
-        buildConfigField "String", "API_KEY", "\"" + properties.getProperty("API_KEY") + "\""
-        buildConfigField "String", "API_SECRET", "\"" + properties.getProperty("API_SECRET") + "\""
-        buildConfigField "String", "UPLOAD_PRESET", "\"" + properties.getProperty("UPLOAD_PRESET") + "\""
+        buildConfigField "String", "CLOUD_API_KEY", "\"" + properties.getProperty("CLOUD_API_KEY") + "\""
+        buildConfigField "String", "CLOUD_API_SECRET", "\"" + properties.getProperty("CLOUD_API_SECRET") + "\""
+        buildConfigField "String", "CLOUD_UPLOAD_PRESET", "\"" + properties.getProperty("CLOUD_UPLOAD_PRESET") + "\""
         buildConfigField "String", "BASE_URL", "\"" + properties.getProperty("BASE_URL") + "\""
+        buildConfigField "String", "API_KEY", "\"" + properties.getProperty("API_KEY") + "\""
     }
 
     buildFeatures {

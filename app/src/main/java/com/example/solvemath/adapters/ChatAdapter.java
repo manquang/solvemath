@@ -1,5 +1,6 @@
 package com.example.solvemath.adapters;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.solvemath.activities.WebviewActivity;
 import com.example.solvemath.databinding.ItemContainerAnswerBinding;
 import com.example.solvemath.databinding.ItemContainerQuestionBinding;
 import com.example.solvemath.models.ChatMessage;
@@ -93,7 +95,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         void setData(ChatMessage chatMessage) {
-            binding.webContent.loadDataWithBaseURL(null, chatMessage.getContent(), "text/html", "UTF-8", null);
+            if (chatMessage.getType() == ChatMessage.Type.TEXT) {
+                binding.textMessage.setText(chatMessage.getContent());
+            } else if (chatMessage.getType() == ChatMessage.Type.LATEX) {
+                binding.textMessage.setText("Hiển thị toàn bộ lời giải");
+                binding.textMessage.setOnClickListener(v -> {
+                    Intent intent = new Intent(binding.getRoot().getContext(), WebviewActivity.class);
+                    intent.putExtra("latex", chatMessage.getContent());
+                    binding.getRoot().getContext().startActivity(intent);
+                });
+            }
         }
     }
 }

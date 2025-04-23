@@ -57,7 +57,7 @@ public class CropActivity extends AppCompatActivity {
         Bitmap bitmapCropImage = binding.cropImageView.getCroppedImage();
         Uri uri = Helper.getTempImageUri(this, bitmapCropImage);
 
-        MediaManager.get().upload(uri).option("upload_preset", BuildConfig.UPLOAD_PRESET).callback(new UploadCallback() {
+        MediaManager.get().upload(uri).option("upload_preset", BuildConfig.CLOUD_UPLOAD_PRESET).callback(new UploadCallback() {
             @Override
             public void onStart(String requestId) {
                 Log.d("Cloudinary Quickstart", "Upload start");

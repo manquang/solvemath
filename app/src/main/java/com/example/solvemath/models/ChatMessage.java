@@ -2,7 +2,7 @@ package com.example.solvemath.models;
 
 public class ChatMessage {
     public enum Type {
-        TEXT, IMAGE, HTML
+        TEXT, IMAGE, HTML, LATEX
     }
     private final String content;
     private final Type type;

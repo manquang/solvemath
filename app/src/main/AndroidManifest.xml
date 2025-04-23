@@ -26,6 +26,9 @@
         android:theme="@style/Theme.Solvemath"
         tools:targetApi="31">
         <activity
+            android:name=".activities.WebviewActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.CropActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
