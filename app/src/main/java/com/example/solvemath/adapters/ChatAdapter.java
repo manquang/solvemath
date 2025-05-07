@@ -1,6 +1,13 @@
 package com.example.solvemath.adapters;
 
 import android.content.Intent;
+import android.graphics.Color;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.UnderlineSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -97,13 +104,23 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         void setData(ChatMessage chatMessage) {
             if (chatMessage.getType() == ChatMessage.Type.TEXT) {
                 binding.textMessage.setText(chatMessage.getContent());
-            } else if (chatMessage.getType() == ChatMessage.Type.LATEX) {
-                binding.textMessage.setText("Hiển thị toàn bộ lời giải");
-                binding.textMessage.setOnClickListener(v -> {
-                    Intent intent = new Intent(binding.getRoot().getContext(), WebviewActivity.class);
-                    intent.putExtra("latex", chatMessage.getContent());
-                    binding.getRoot().getContext().startActivity(intent);
-                });
+            } else if (chatMessage.getType() == ChatMessage.Type.HTML) {
+                String fullText = "Xem toàn bộ lời giải. Nhấp vào đây.";
+                SpannableString spannable = new SpannableString(fullText);
+                int start = fullText.indexOf("đây");
+                int end = start + "đây".length();
+                spannable.setSpan(new UnderlineSpan(), start,  end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE); // Gạch chân chữ "đây"
+                spannable.setSpan(new ClickableSpan() {
+                    @Override
+                    public void onClick(View widget) {
+                        Intent intent = new Intent(binding.getRoot().getContext(), WebviewActivity.class);
+                        intent.putExtra("html", chatMessage.getContent());
+                        binding.getRoot().getContext().startActivity(intent);
+                    }
+                }, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE); // Biến "đây" thành đoạn có thể nhấn
+
+                binding.textMessage.setText(spannable);
+                binding.textMessage.setMovementMethod(LinkMovementMethod.getInstance());
             }
         }
     }

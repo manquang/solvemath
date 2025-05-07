@@ -1,25 +1,32 @@
 package com.example.solvemath.activities;
 
+import static androidx.fragment.app.FragmentManagerKt.commit;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.DisplayCutout;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowManager;
 
 import androidx.activity.EdgeToEdge;
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.NavigationUI;
 
 import com.example.solvemath.R;
 import com.example.solvemath.databinding.ActivityMainBinding;
+import com.example.solvemath.fragments.HistoryFragment;
+import com.example.solvemath.fragments.HomeFragment;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -33,21 +40,23 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomAppBar, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(0, systemBars.top, 0, systemBars.bottom);
+            v.setPadding(0, 0, 0, systemBars.bottom);
             return WindowInsetsCompat.CONSUMED;
         });
-
-        binding.questionInput.setOnClickListener(v-> {
-            Intent chatIntent = new Intent(MainActivity.this, ChatActivity.class);
-            startActivity(chatIntent);
-        });
-
-        binding.fabCamera.setOnClickListener(v -> {
-                Intent cameraIntent = new Intent(MainActivity.this, CameraActivity.class);
-                startActivity(cameraIntent);
-        });
-
+        init();
     }
+
+    private void init() {
+        NavController navController = Navigation.findNavController(MainActivity.this, R.id.fragmentContainerView);
+        NavigationUI.setupWithNavController(binding.bottomNavView, navController);
+        binding.fabCamera.setOnClickListener(v -> {
+            Intent cameraIntent = new Intent(MainActivity.this, CameraActivity.class);
+            startActivity(cameraIntent);
+        });
+    }
+
+
 }

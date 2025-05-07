@@ -15,13 +15,18 @@ import androidx.core.graphics.Insets;
 
 import com.example.solvemath.ApiService;
 import com.example.solvemath.adapters.ChatAdapter;
+import com.example.solvemath.database.ChatDatabase;
 import com.example.solvemath.databinding.ActivityChatBinding;
 import com.example.solvemath.models.ChatMessage;
 import com.example.solvemath.models.ChatRequest;
 import com.example.solvemath.models.ChatResponse;
+import com.example.solvemath.models.ChatSession;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -33,6 +38,8 @@ public class ChatActivity extends AppCompatActivity {
     private ChatAdapter adapter;
     private List<ChatMessage> chatMessages = new ArrayList<>();
     private ApiService apiService;
+    private int sessionId = -1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +47,6 @@ public class ChatActivity extends AppCompatActivity {
         binding = ActivityChatBinding.inflate(getLayoutInflater());
         EdgeToEdge.enable(this);
         setContentView(binding.getRoot());
-
         setupEdgeToEdge();
         initUI();
 
@@ -60,11 +66,29 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void initUI() {
+        sessionId = getIntent().getIntExtra("sessionId", -1);
+        if (sessionId != -1) {
+            loadMessagesFromSession(sessionId);
+        }
+
         adapter = new ChatAdapter(chatMessages);
         binding.chatRecycleView.setAdapter(adapter);
 
         binding.back.setOnClickListener(v -> finish());
         binding.layoutSend.setOnClickListener(v -> sendQuestion(ChatMessage.Type.TEXT));
+    }
+
+    private void loadMessagesFromSession(int sessionId) {
+        new Thread(() -> {
+            ChatDatabase db = ChatDatabase.getInstance(getApplicationContext());
+            List<ChatMessage> messages = db.chatMessageDao().getMessagesBySessionId(sessionId);
+            runOnUiThread(() -> {
+                chatMessages.clear();
+                chatMessages.addAll(messages);
+                adapter.notifyDataSetChanged();
+                binding.chatRecycleView.scrollToPosition(chatMessages.size() - 1);
+            });
+        }).start();
     }
 
     private void sendQuestion(ChatMessage.Type type) {
@@ -74,71 +98,100 @@ public class ChatActivity extends AppCompatActivity {
         if (imageUrl == null && userInput.isEmpty()) return;
 
         ChatMessage userMessage = new ChatMessage(true, type, type == ChatMessage.Type.IMAGE ? imageUrl : userInput);
-        addMessage(userMessage);
+        createSession(userInput, imageUrl, type, () -> {
+            addMessage(userMessage);
+        });
 
+        ChatRequest request = new ChatRequest();
         if (type == ChatMessage.Type.IMAGE) {
-            ArrayList<ChatRequest.Content> contents = new ArrayList<>();
-            contents.add(ChatRequest.Content.fromText("Hãy trích xuất lại nội dung văn bản trong ảnh sau, không cần giải."));
-            contents.add(ChatRequest.Content.fromImageUrl(imageUrl));
-            ChatRequest request = new ChatRequest("Qwen/Qwen2.5-VL-72B-Instruct",
-                    List.of(new ChatRequest.Message("user",contents)), 0.3,0.9, 1024);
-
-            apiService.askAI(request).enqueue(new Callback<>() {
-                @Override
-                public void onResponse(@NonNull Call<ChatResponse> call, @NonNull Response<ChatResponse> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        String reply = response.body().choices.get(0).message.content;
-                        ChatMessage extractedMessage = new ChatMessage(true, ChatMessage.Type.TEXT, reply);
-                        addMessage(extractedMessage);
-                        sendToDeepSeek(reply);
-                    }
-                }
-
-                @Override
-                public void onFailure(@NonNull Call<ChatResponse> call, @NonNull Throwable t) {
-                    ChatMessage error = new ChatMessage(true, ChatMessage.Type.TEXT, "Lỗi nhận diện ảnh: " + t.getMessage());
-                    addMessage(error);
-                }
-            });
+            request.setImage_url(imageUrl);
             getIntent().removeExtra("url");
         } else {
+            request.setInput(userInput);
             binding.questionInput.setText(null);
-            sendToDeepSeek(userInput);
         }
-    }
 
-
-    private void sendToDeepSeek(String content) {
-        ChatRequest request = new ChatRequest("deepseek-ai/DeepSeek-V3",
-                List.of(new ChatRequest.Message("user",
-                        List.of(ChatRequest.Content.fromText(content)))), 0.3, 0.9, 1024);
-
-        apiService.askAI(request).enqueue(new Callback<>() {
+        apiService.sendQA(request).enqueue(new Callback<ChatResponse>() {
             @Override
-            public void onResponse(@NonNull Call<ChatResponse> call, @NonNull Response<ChatResponse> response) {
+            public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    String reply = response.body().choices.get(0).message.content;
+                    String title = response.body().getProblem();
+                    String summary = response.body().getSummary();
+                    String fileUrl = response.body().getFileUrl();
+                    String answerText = response.body().getResult();
 
-                    ChatMessage.Type type = containsLatex(reply) ? ChatMessage.Type.LATEX : ChatMessage.Type.TEXT;
-                    addMessage(new ChatMessage(false, type, reply));
+                    updateSession(title, summary, imageUrl);
+                    if (answerText != null && !answerText.trim().isEmpty()) {
+                        ChatMessage textMessage = new ChatMessage(false, ChatMessage.Type.TEXT, answerText);
+                        addMessage(textMessage);
+                    }
+
+                    if (fileUrl != null && !fileUrl.trim().isEmpty()) {
+                        ChatMessage htmlMessage = new ChatMessage(false, ChatMessage.Type.HTML, fileUrl);
+                        addMessage(htmlMessage);
+                    }
+                } else {
+                    ChatMessage error = new ChatMessage(false, ChatMessage.Type.TEXT, "Lỗi nhận câu trả lời.");
+                    addMessage(error);
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<ChatResponse> call, @NonNull Throwable t) {
-                addMessage(new ChatMessage(false, ChatMessage.Type.TEXT, "Lỗi gửi tới DeepSeek: " + t.getMessage()));
+            public void onFailure(Call<ChatResponse> call, Throwable t) {
+                ChatMessage error = new ChatMessage(false, ChatMessage.Type.TEXT, "Lỗi : " + t.getMessage());
+                addMessage(error);
             }
         });
     }
 
-    private boolean containsLatex(String content) {
-        return content.contains("\\(") || content.contains("\\[") || content.contains("$$");
+    private void createSession(String title, String imageUrl, ChatMessage.Type type, Runnable afterSessionCreated) {
+        if (sessionId == -1) {
+            String sessionTitle = type == ChatMessage.Type.TEXT ? title : "Ảnh";
+            String sessionImageUrl = type == ChatMessage.Type.IMAGE ? imageUrl : null;
+
+            long createdAt = System.currentTimeMillis();
+            ChatSession session = new ChatSession(sessionImageUrl, "", sessionTitle, createdAt);
+
+            new Thread(() -> {
+                ChatDatabase db = ChatDatabase.getInstance(getApplicationContext());
+                long id = db.chatSessionDao().insert(session);
+                sessionId = (int) id;
+                runOnUiThread(afterSessionCreated);
+            }).start();
+        } else {
+            afterSessionCreated.run();
+        }
+    }
+
+    private void updateSession(String title, String summary, String imageUrl) {
+        new Thread(() -> {
+            ChatDatabase db = ChatDatabase.getInstance(getApplicationContext());
+            ChatSession session = db.chatSessionDao().getSessionById(sessionId);
+            if (session != null) {
+                session.setTitle(title);
+                session.setSummary(summary);
+                if (imageUrl != null) {
+                    session.setImageUrl(imageUrl);
+                }
+                db.chatSessionDao().update(session);
+            }
+        }).start();
     }
 
     private void addMessage(ChatMessage message) {
         chatMessages.add(message);
         adapter.notifyItemInserted(chatMessages.size() - 1);
         binding.chatRecycleView.smoothScrollToPosition(chatMessages.size() - 1);
+        saveMessageToRoom(message);
     }
 
+    private void saveMessageToRoom(ChatMessage message) {
+        new Thread(() -> {
+            if (sessionId != -1) {
+                ChatDatabase db = ChatDatabase.getInstance(getApplicationContext());
+                message.setSessionId(sessionId);
+                db.chatMessageDao().insert(message);
+            }
+        }).start();
+    }
 }

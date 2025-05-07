@@ -1,16 +1,34 @@
 package com.example.solvemath.models;
 
-import java.util.List;
+import com.google.gson.annotations.SerializedName;
+
 
 public class ChatResponse {
-    public List<Choice> choices;
+    @SerializedName("result")
+    private String result;
 
-    public static class Choice {
-        public Message message;
+    @SerializedName("problem")
+    private String problem;
+
+    @SerializedName("summary")
+    private String summary;
+
+    @SerializedName("file_url")
+    private String fileUrl;
+
+    public String getSummary() {
+        return summary;
     }
 
-    public static class Message {
-        public String role;
-        public String content;
+    public String getProblem() {
+        return problem;
+    }
+
+    public String getResult() {
+        return result;
+    }
+
+    public String getFileUrl() {
+        return fileUrl;
     }
 }

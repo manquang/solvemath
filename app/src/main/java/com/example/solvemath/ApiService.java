@@ -9,6 +9,8 @@ import com.example.solvemath.models.ChatRequest;
 import com.example.solvemath.models.ChatResponse;
 
 public interface ApiService {
-    @POST("chat/completions")
-    Call<ChatResponse> askAI(@Body ChatRequest request);
+//    @POST("chat/completions")
+//    Call<ChatResponse> askAI(@Body ChatRequest request);
+    @POST("/qa")
+    Call<ChatResponse> sendQA(@Body ChatRequest request);
 }

@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -28,21 +27,15 @@ public class SolveMathApp extends Application {
         MediaManager.init(this, config);
 
         //Retrofit
-        String header = "Bearer " + BuildConfig.API_KEY;
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(chain -> {
-                    Request request = chain.request().newBuilder()
-                            .addHeader("Authorization", header)
-                            .addHeader("Content-Type", "application/json")
-                            .build();
-                    return chain.proceed(request);
-                }).connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS).build();
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(600, TimeUnit.SECONDS)
+                .readTimeout(600, TimeUnit.SECONDS)
+                .writeTimeout(600, TimeUnit.SECONDS)
+                .build();
 
         retrofit = new Retrofit.Builder()
                 .baseUrl(BuildConfig.BASE_URL)
-                .client(client)
+                .client(okHttpClient)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
     }

@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Solvemath</string>
     <string name="type_a_message">Gửi 1 tin nhắn</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="no_item">Không có mục nào</string>
+    <string name="history_title">Lịch sử Giải bài</string>
 </resources>
