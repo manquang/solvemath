@@ -3,7 +3,9 @@ package com.example.solvemath.activities;
 import static com.example.solvemath.SolveMathApp.getRetrofitInstance;
 
 import android.os.Bundle;
-import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -14,6 +16,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.graphics.Insets;
 
 import com.example.solvemath.ApiService;
+import com.example.solvemath.R;
 import com.example.solvemath.adapters.ChatAdapter;
 import com.example.solvemath.database.ChatDatabase;
 import com.example.solvemath.databinding.ActivityChatBinding;
@@ -21,6 +24,9 @@ import com.example.solvemath.models.ChatMessage;
 import com.example.solvemath.models.ChatRequest;
 import com.example.solvemath.models.ChatResponse;
 import com.example.solvemath.models.ChatSession;
+import com.example.solvemath.models.OCRResponse;
+
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -92,65 +98,58 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void sendQuestion(ChatMessage.Type type) {
-        String imageUrl = getIntent().getStringExtra("url");
+        String imageUrl = getIntent().getStringExtra("img_url");
+        String publicImageId = getIntent().getStringExtra("public_id");
         String userInput = binding.questionInput.getText().toString().trim();
 
         if (imageUrl == null && userInput.isEmpty()) return;
 
-        ChatMessage userMessage = new ChatMessage(true, type, type == ChatMessage.Type.IMAGE ? imageUrl : userInput);
-        createSession(userInput, imageUrl, type, () -> {
-            addMessage(userMessage);
-        });
+        ChatMessage userMessage = new ChatMessage(true, type,
+                type == ChatMessage.Type.IMAGE ? imageUrl : userInput, publicImageId);
 
-        ChatRequest request = new ChatRequest();
+        createSession(userInput, imageUrl, type, () -> addMessage(userMessage));
+
+        ChatRequest ocrRequest = new ChatRequest();
+        ChatRequest qaRequest = new ChatRequest();
+        ocrRequest.setImage_url(imageUrl);
+
         if (type == ChatMessage.Type.IMAGE) {
-            request.setImage_url(imageUrl);
-            getIntent().removeExtra("url");
-        } else {
-            request.setInput(userInput);
-            binding.questionInput.setText(null);
-        }
-
-        apiService.sendQA(request).enqueue(new Callback<ChatResponse>() {
-            @Override
-            public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    String title = response.body().getProblem();
-                    String summary = response.body().getSummary();
-                    String fileUrl = response.body().getFileUrl();
-                    String answerText = response.body().getResult();
-
-                    updateSession(title, summary, imageUrl);
-                    if (answerText != null && !answerText.trim().isEmpty()) {
-                        ChatMessage textMessage = new ChatMessage(false, ChatMessage.Type.TEXT, answerText);
-                        addMessage(textMessage);
+            apiService.extractOCR(ocrRequest).enqueue(new Callback<OCRResponse>() {
+                @Override
+                public void onResponse(Call<OCRResponse> call, Response<OCRResponse> response) {
+                    String extractedText = "";
+                    if (response.isSuccessful() && response.body() != null) {
+                        extractedText = response.body().getOcrText();
                     }
 
-                    if (fileUrl != null && !fileUrl.trim().isEmpty()) {
-                        ChatMessage htmlMessage = new ChatMessage(false, ChatMessage.Type.HTML, fileUrl);
-                        addMessage(htmlMessage);
-                    }
-                } else {
-                    ChatMessage error = new ChatMessage(false, ChatMessage.Type.TEXT, "Lỗi nhận câu trả lời.");
+                    addMessage(new ChatMessage(true, ChatMessage.Type.TEXT, "Bài toán sau khi trích xuất được: \n" + extractedText, null));
+                    qaRequest.setInput(extractedText);
+                    sendQARequest(qaRequest);
+                }
+
+                @Override
+                public void onFailure(Call<OCRResponse> call, Throwable t) {
+                    ChatMessage error = new ChatMessage(false, ChatMessage.Type.TEXT,
+                            "Lỗi OCR: " + t.getMessage(), null);
                     addMessage(error);
                 }
-            }
+            });
 
-            @Override
-            public void onFailure(Call<ChatResponse> call, Throwable t) {
-                ChatMessage error = new ChatMessage(false, ChatMessage.Type.TEXT, "Lỗi : " + t.getMessage());
-                addMessage(error);
-            }
-        });
+        } else {
+            qaRequest.setInput(userInput);
+            binding.questionInput.setText(null);
+            sendQARequest(qaRequest);
+        }
     }
+
+
 
     private void createSession(String title, String imageUrl, ChatMessage.Type type, Runnable afterSessionCreated) {
         if (sessionId == -1) {
-            String sessionTitle = type == ChatMessage.Type.TEXT ? title : "Ảnh";
             String sessionImageUrl = type == ChatMessage.Type.IMAGE ? imageUrl : null;
 
             long createdAt = System.currentTimeMillis();
-            ChatSession session = new ChatSession(sessionImageUrl, "", sessionTitle, createdAt);
+            ChatSession session = new ChatSession(sessionImageUrl, "", title, createdAt);
 
             new Thread(() -> {
                 ChatDatabase db = ChatDatabase.getInstance(getApplicationContext());
@@ -163,16 +162,52 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-    private void updateSession(String title, String summary, String imageUrl) {
+    private void sendQARequest(ChatRequest request) {
+        apiService.sendQA(request).enqueue(new Callback<ChatResponse>() {
+            @Override
+            public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    String summary = response.body().getSummary();
+                    String fileUrl = response.body().getFileUrl();
+                    String answerText = response.body().getResult();
+                    String publicID = response.body().getPublicID();
+
+                    updateSession(request.getInput(), summary);
+
+                    if (answerText != null && !answerText.trim().isEmpty()) {
+                        ChatMessage textMessage = new ChatMessage(false, ChatMessage.Type.TEXT, answerText, null);
+                        addMessage(textMessage);
+                    }
+
+                    if (fileUrl != null && !fileUrl.trim().isEmpty()) {
+                        ChatMessage htmlMessage = new ChatMessage(false, ChatMessage.Type.HTML, fileUrl, publicID);
+                        addMessage(htmlMessage);
+                    }
+                } else {
+                    ChatMessage error = new ChatMessage(false, ChatMessage.Type.TEXT,
+                            "Lỗi nhận câu trả lời.", null);
+                    addMessage(error);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ChatResponse> call, Throwable t) {
+                ChatMessage error = new ChatMessage(false, ChatMessage.Type.TEXT,
+                        "Lỗi: " + t.getMessage(), null);
+                addMessage(error);
+            }
+        });
+    }
+
+
+
+    private void updateSession(String title, String summary) {
         new Thread(() -> {
             ChatDatabase db = ChatDatabase.getInstance(getApplicationContext());
             ChatSession session = db.chatSessionDao().getSessionById(sessionId);
             if (session != null) {
                 session.setTitle(title);
                 session.setSummary(summary);
-                if (imageUrl != null) {
-                    session.setImageUrl(imageUrl);
-                }
                 db.chatSessionDao().update(session);
             }
         }).start();

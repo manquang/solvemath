@@ -1,5 +1,7 @@
 package com.example.solvemath.adapters;
 
+import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.text.Spannable;
@@ -11,15 +13,19 @@ import android.text.style.UnderlineSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.solvemath.R;
 import com.example.solvemath.activities.WebviewActivity;
 import com.example.solvemath.databinding.ItemContainerAnswerBinding;
 import com.example.solvemath.databinding.ItemContainerQuestionBinding;
 import com.example.solvemath.models.ChatMessage;
+import com.github.chrisbanes.photoview.PhotoView;
 
 import java.util.List;
 
@@ -82,13 +88,28 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         void setData(ChatMessage chatMessage) {
             if (chatMessage.getType() == ChatMessage.Type.TEXT) {
                 binding.textUserMessage.setVisibility(View.VISIBLE);
-                binding.imageUserMessage.setVisibility(View.GONE);
+                binding.imageContainer.setVisibility(View.GONE);
                 binding.textUserMessage.setText(chatMessage.getContent());
             } else if (chatMessage.getType() == ChatMessage.Type.IMAGE) {
                 binding.textUserMessage.setVisibility(View.GONE);
-                binding.imageUserMessage.setVisibility(View.VISIBLE);
+                binding.imageContainer.setVisibility(View.VISIBLE);
                 Glide.with(binding.getRoot()).load(chatMessage.getContent()).into(binding.imageUserMessage);
             }
+            binding.imageUserMessage.setOnClickListener(v -> {
+                showImageDialog(binding.getRoot().getContext(), chatMessage.getContent());
+            });
+        }
+
+        private void showImageDialog(Context context, String imageUrl) {
+            Dialog dialog = new Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+            dialog.setContentView(R.layout.dialog_fullscreen_image);
+
+            PhotoView photoView = dialog.findViewById(R.id.dialogImage);
+            Glide.with(context).load(imageUrl).into(photoView);
+
+            photoView.setOnClickListener(v -> dialog.dismiss()); // nhấn ảnh lần nữa để đóng
+
+            dialog.show();
         }
     }
 
@@ -109,7 +130,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 SpannableString spannable = new SpannableString(fullText);
                 int start = fullText.indexOf("đây");
                 int end = start + "đây".length();
-                spannable.setSpan(new UnderlineSpan(), start,  end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE); // Gạch chân chữ "đây"
+                spannable.setSpan(new UnderlineSpan(), start,  end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 spannable.setSpan(new ClickableSpan() {
                     @Override
                     public void onClick(View widget) {
@@ -118,6 +139,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         binding.getRoot().getContext().startActivity(intent);
                     }
                 }, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE); // Biến "đây" thành đoạn có thể nhấn
+
+
 
                 binding.textMessage.setText(spannable);
                 binding.textMessage.setMovementMethod(LinkMovementMethod.getInstance());

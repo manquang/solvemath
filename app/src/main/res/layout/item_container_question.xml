@@ -12,20 +12,31 @@
         android:background="@drawable/background_question_message"
         android:padding="12dp"
         android:textColor="@color/white"
-        android:textSize="13sp"
+        android:textSize="15sp"
         app:layout_constraintWidth_max="wrap"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_percent="0.8" />
 
-    <ImageView
-        android:id="@+id/imageUserMessage"
+    <FrameLayout
+        android:id="@+id/imageContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:scaleType="fitCenter"
-        android:visibility="gone"
+        android:background="@drawable/background_question_message"
+        android:padding="10dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textUserMessage" />
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/textUserMessage">
+
+        <ImageView
+            android:id="@+id/imageUserMessage"
+            android:layout_width="220dp"
+            android:layout_height="150dp"
+            android:background="@drawable/background_question_message"
+            android:scaleType="centerCrop"
+             />
+    </FrameLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

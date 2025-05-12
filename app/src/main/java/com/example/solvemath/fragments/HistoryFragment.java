@@ -1,37 +1,27 @@
 package com.example.solvemath.fragments;
 
-import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.core.graphics.Insets;
-import androidx.core.view.DisplayCutoutCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
-import android.util.Log;
-import android.view.DisplayCutout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 
-import com.example.solvemath.R;
-import com.example.solvemath.activities.ChatActivity;
 import com.example.solvemath.adapters.HistoryAdapter;
-import com.example.solvemath.adapters.UpdateRec;
+import com.example.solvemath.adapters.UpdateCallback;
 import com.example.solvemath.database.ChatDatabase;
 import com.example.solvemath.databinding.FragmentHistoryBinding;
-import com.example.solvemath.databinding.FragmentHomeBinding;
 import com.example.solvemath.models.ChatSession;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
-public class HistoryFragment extends Fragment implements UpdateRec<ChatSession> {
+public class HistoryFragment extends Fragment implements UpdateCallback<ChatSession> {
 
     private FragmentHistoryBinding binding;
     private HistoryAdapter adapter;

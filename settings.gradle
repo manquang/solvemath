@@ -9,13 +9,16 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+        maven { url "https://www.jitpack.io" } // Đặt thẳng ở đây
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
+        maven { url "https://www.jitpack.io" } // Đặt thẳng ở đây
     }
 }
 

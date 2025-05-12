@@ -2,10 +2,7 @@ package com.example.solvemath;
 
 import android.app.Application;
 
-import com.cloudinary.android.MediaManager;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -19,18 +16,12 @@ public class SolveMathApp extends Application {
     public void onCreate() {
         super.onCreate();
 
-        // Cloudinary
-        Map config = new HashMap();
-        config.put("cloud_name", BuildConfig.CLOUD_NAME);
-        config.put("api_key", BuildConfig.CLOUD_API_KEY);
-        config.put("api_secret", BuildConfig.CLOUD_API_SECRET);
-        MediaManager.init(this, config);
 
         //Retrofit
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .connectTimeout(600, TimeUnit.SECONDS)
-                .readTimeout(600, TimeUnit.SECONDS)
-                .writeTimeout(600, TimeUnit.SECONDS)
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
                 .build();
 
         retrofit = new Retrofit.Builder()

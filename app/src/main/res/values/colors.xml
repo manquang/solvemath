@@ -12,4 +12,6 @@
     <color name="input_background">#ECECEC</color>
     <color name="icon_background">#20FFFFFF</color>
     <color name="error">#B00020</color>
+    <color name="linkColor">#FFEB3B</color> <!-- màu xanh sáng -->
+
 </resources>

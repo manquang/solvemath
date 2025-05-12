@@ -2,23 +2,15 @@ package com.example.solvemath.activities;
 
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.ImageFormat;
-import android.graphics.Matrix;
-import android.graphics.Rect;
-import android.graphics.YuvImage;
-import android.media.Image;
+
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.view.View;
+import android.util.Log;
 import android.view.Window;
-import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -33,7 +25,6 @@ import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
@@ -41,37 +32,17 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.LifecycleOwner;
-
-import com.canhub.cropper.CropImageContract;
-
-
-import com.canhub.cropper.CropImageContractOptions;
-import com.canhub.cropper.CropImageOptions;
-import com.canhub.cropper.CropImageView;
-import com.cloudinary.android.MediaManager;
 import com.example.solvemath.R;
 import com.example.solvemath.databinding.ActivityCameraBinding;
 
 
-import com.bumptech.glide.Glide;
-import com.cloudinary.android.callback.ErrorInfo;
-import com.cloudinary.android.callback.UploadCallback;
 import com.example.solvemath.utilities.Helper;
 import com.google.common.util.concurrent.ListenableFuture;
 
-
-import android.util.Log;
-
-
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
-
-
-import java.io.File;
+import java.io.InputStream;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
@@ -85,7 +56,10 @@ public class CameraActivity extends AppCompatActivity {
             new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Uri imageUri = result.getData().getData();
-                    startCrop(imageUri);
+                    Log.d("ImageURI", imageUri.toString());
+
+                    Uri safeUri = copyUriToTempFile(imageUri);
+                    startCrop(safeUri);
                 }
             });
 
@@ -122,6 +96,11 @@ public class CameraActivity extends AppCompatActivity {
         binding.flipCamera.setOnClickListener(v -> {
             cameraFacing = (cameraFacing == CameraSelector.LENS_FACING_BACK) ? CameraSelector.LENS_FACING_FRONT : CameraSelector.LENS_FACING_BACK;
             startCamera(cameraFacing);
+        });
+        binding.keyboard.setOnClickListener(v->{
+            Intent intent = new Intent(this, ChatActivity.class);
+            startActivity(intent);
+            finish();
         });
     }
 
@@ -190,6 +169,7 @@ public class CameraActivity extends AppCompatActivity {
         Intent intent = new Intent(this, CropActivity.class);
         intent.putExtra("imageUri", imageUri);
         startActivity(intent);
+        finish();
     }
 
 
@@ -200,6 +180,25 @@ public class CameraActivity extends AppCompatActivity {
                     , PERMISSION_CAMERA);
         }
     }
+    public Uri copyUriToTempFile(Uri sourceUri) {
+        try {
+            InputStream inputStream = getContentResolver().openInputStream(sourceUri);
+            File tempFile = File.createTempFile("temp_image", ".jpg", getCacheDir());
+            FileOutputStream outputStream = new FileOutputStream(tempFile);
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            inputStream.close();
+            outputStream.close();
+            return Uri.fromFile(tempFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,

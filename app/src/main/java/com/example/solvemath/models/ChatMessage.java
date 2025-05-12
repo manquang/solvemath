@@ -25,11 +25,21 @@ public class ChatMessage {
     public long timestamp;
     private final boolean isUser;
 
-    public ChatMessage(boolean isUser, Type type, String content) {
-        this.isUser = isUser;
+    private String publicID;
+
+    public ChatMessage(boolean isUser, Type type, String content,String publicID) {
         this.content = content;
         this.type = type;
-        this.timestamp = System.currentTimeMillis();
+        this.isUser = isUser;
+        this.publicID = publicID;
+    }
+
+    public String getPublicID() {
+        return publicID;
+    }
+
+    public void setPublicID(String publicID) {
+        this.publicID = publicID;
     }
 
     public int getSessionId() {

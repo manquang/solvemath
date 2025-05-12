@@ -12,6 +12,8 @@ import java.util.List;
 public interface ChatMessageDAO {
     @Insert
     void insert(ChatMessage chatMessage);
+    @Query("SELECT publicID FROM chat_message WHERE sessionId = :sessionId and publicID is NOT NULL")
+    List<String> getAllPublicIDOfSession(int sessionId);
 
     @Query("SELECT * FROM chat_message ORDER BY timestamp ASC")
     List<ChatMessage> getAllMessages();

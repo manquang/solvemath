@@ -7,8 +7,8 @@ public class ChatResponse {
     @SerializedName("result")
     private String result;
 
-    @SerializedName("problem")
-    private String problem;
+    @SerializedName("public_id")
+    private String publicID;
 
     @SerializedName("summary")
     private String summary;
@@ -20,15 +20,14 @@ public class ChatResponse {
         return summary;
     }
 
-    public String getProblem() {
-        return problem;
-    }
-
     public String getResult() {
         return result;
     }
 
     public String getFileUrl() {
         return fileUrl;
+    }
+    public String getPublicID() {
+        return publicID;
     }
 }

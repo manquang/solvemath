@@ -12,6 +12,7 @@ import androidx.camera.core.ImageProxy;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 public class Helper {
@@ -48,5 +49,6 @@ public class Helper {
         matrix.postRotate(degrees);
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
+
 
 }
