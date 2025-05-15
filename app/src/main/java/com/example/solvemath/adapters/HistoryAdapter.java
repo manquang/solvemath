@@ -3,7 +3,6 @@ package com.example.solvemath.adapters;
 import static com.example.solvemath.SolveMathApp.getRetrofitInstance;
 
 import android.content.Intent;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +16,6 @@ import com.example.solvemath.ApiService;
 import com.example.solvemath.activities.ChatActivity;
 import com.example.solvemath.database.ChatDatabase;
 import com.example.solvemath.databinding.ItemHistoryBinding;
-import com.example.solvemath.models.ChatMessage;
 import com.example.solvemath.models.ChatSession;
 
 import java.text.SimpleDateFormat;
@@ -34,11 +32,11 @@ import retrofit2.Response;
 
 public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder> {
     private final List<ChatSession> chatSessions;
-    UpdateCallback updateCallback;
+    UpdateRec updateRec;
 
-    public HistoryAdapter(List<ChatSession> chatSessions, UpdateCallback updateCallback) {
+    public HistoryAdapter(List<ChatSession> chatSessions, UpdateRec updateRec) {
         this.chatSessions = chatSessions;
-        this.updateCallback = updateCallback;
+        this.updateRec = updateRec;
     }
 
     @NonNull
@@ -107,7 +105,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
                 chatSessions.remove(position);
                 notifyItemRemoved(position);
                 notifyItemRangeChanged(position, chatSessions.size());
-                updateCallback.callBack(chatSessions);
+                updateRec.callBack(chatSessions);
             }
         });
     }

@@ -1,5 +1,6 @@
 package com.example.solvemath.adapters;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -25,6 +26,7 @@ import com.example.solvemath.activities.WebviewActivity;
 import com.example.solvemath.databinding.ItemContainerAnswerBinding;
 import com.example.solvemath.databinding.ItemContainerQuestionBinding;
 import com.example.solvemath.models.ChatMessage;
+import com.example.solvemath.models.OnMessageListener;
 import com.github.chrisbanes.photoview.PhotoView;
 
 import java.util.List;
@@ -32,11 +34,13 @@ import java.util.List;
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private final List<ChatMessage> chatMessages;
+    private static OnMessageListener listener = null;
     public static final int VIEW_TYPE_USER_MESSAGE = 1;
     public static final int VIEW_TYPE_AI_MESSAGE = 2;
 
-    public ChatAdapter(List<ChatMessage> chatMessages) {
+    public ChatAdapter(List<ChatMessage> chatMessages, OnMessageListener listener) {
         this.chatMessages = chatMessages;
+        this.listener = listener;
     }
 
 
@@ -95,9 +99,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 binding.imageContainer.setVisibility(View.VISIBLE);
                 Glide.with(binding.getRoot()).load(chatMessage.getContent()).into(binding.imageUserMessage);
             }
-            binding.imageUserMessage.setOnClickListener(v -> {
+            itemView.setOnClickListener(v -> {
                 showImageDialog(binding.getRoot().getContext(), chatMessage.getContent());
             });
+
+            if (chatMessage.isFailed()) {
+                itemView.setOnLongClickListener(v -> {
+                    showResendDialog(chatMessage);
+                    return true;
+                });
+            } else {
+                itemView.setOnLongClickListener(null);
+            }
         }
 
         private void showImageDialog(Context context, String imageUrl) {
@@ -110,6 +123,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             photoView.setOnClickListener(v -> dialog.dismiss()); // nhấn ảnh lần nữa để đóng
 
             dialog.show();
+        }
+        private void showResendDialog(ChatMessage chatMessage) {
+            new AlertDialog.Builder(binding.getRoot().getContext())
+                    .setTitle("Gửi lại tin nhắn?")
+                    .setMessage("Bạn có muốn gửi lại tin nhắn này không?")
+                    .setPositiveButton("Gửi lại", (dialog, which) -> {
+                        listener.onResend(chatMessage);
+                    })
+                    .setNegativeButton("Hủy", null)
+                    .show();
         }
     }
 

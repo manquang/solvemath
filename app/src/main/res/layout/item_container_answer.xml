@@ -8,8 +8,8 @@
 
     <com.makeramen.roundedimageview.RoundedImageView
         android:id="@+id/imageProfile"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
         android:scaleType="centerCrop"
        android:src="@mipmap/ic_launcher"
         app:layout_constraintStart_toStartOf="parent"
@@ -24,7 +24,7 @@
         android:background="@drawable/background_answer"
         android:padding="12dp"
         android:textColor="@color/white"
-        android:textSize="15sp"
+        android:textSize="18sp"
         android:layout_marginStart="4dp"
         app:layout_constraintStart_toEndOf="@id/imageProfile"
         app:layout_constraintTop_toTopOf="parent"

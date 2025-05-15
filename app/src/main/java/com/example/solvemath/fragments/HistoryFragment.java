@@ -13,7 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.solvemath.adapters.HistoryAdapter;
-import com.example.solvemath.adapters.UpdateCallback;
+import com.example.solvemath.adapters.UpdateRec;
 import com.example.solvemath.database.ChatDatabase;
 import com.example.solvemath.databinding.FragmentHistoryBinding;
 import com.example.solvemath.models.ChatSession;
@@ -21,7 +21,7 @@ import com.example.solvemath.models.ChatSession;
 import java.util.List;
 
 
-public class HistoryFragment extends Fragment implements UpdateCallback<ChatSession> {
+public class HistoryFragment extends Fragment implements UpdateRec<ChatSession> {
 
     private FragmentHistoryBinding binding;
     private HistoryAdapter adapter;

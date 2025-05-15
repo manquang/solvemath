@@ -87,6 +87,9 @@ public class CropActivity extends AppCompatActivity {
                         Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
                         intent.putExtra("img_url", imageUrl);
                         intent.putExtra("public_id", publicImageId);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        // FLAG_ACTIVITY_CLEAR_TOP: nếu ChatActivity đã có trong back stack, nó sẽ được đưa lên đầu và các activity khác (Camera, Crop) bị huỷ.
+                        // FLAG_ACTIVITY_SINGLE_TOP nếu ChatActivity đang ở trên cùng, nó sẽ không tạo activity mới.
                         Toast.makeText(getApplicationContext(), "Upload thành công", Toast.LENGTH_SHORT).show();
                         startActivity(intent);
                         finish();

@@ -19,6 +19,8 @@ public class ChatMessage {
     public enum Type {
         TEXT, IMAGE, HTML
     }
+
+    private boolean isFailed = true;
     private int sessionId;
     private final String content;
     private final Type type;
@@ -32,6 +34,14 @@ public class ChatMessage {
         this.type = type;
         this.isUser = isUser;
         this.publicID = publicID;
+    }
+
+    public boolean isFailed() {
+        return isFailed;
+    }
+
+    public void setFailed(boolean failed) {
+        isFailed = failed;
     }
 
     public String getPublicID() {
